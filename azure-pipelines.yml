@@ -1,0 +1,27 @@
+# Starter pipeline
+# Start with a minimal pipeline that you can customize to build and deploy your code.
+# Add steps that build, run tests, deploy, and more:
+# https://aka.ms/yaml
+
+trigger:
+- main
+
+pool:
+  vmImage: 'ubuntu-latest'
+
+steps:
+- script: |
+    docker run \
+      -v "$(Build.SourcesDirectory):/app" \
+      -v "$(Build.ArtifactStagingDirectory):/reports" \
+      shiftleft/sast-scan scan --src /app --build \
+      --out_dir /reports/CodeAnalysisLogs
+  displayName: "Perform Scan"
+  continueOnError: "true"
+- task: PublishBuildArtifacts@1
+  displayName: "Publish analysis logs"
+  inputs:
+    PathtoPublish: "$(Build.ArtifactStagingDirectory)/CodeAnalysisLogs"
+    ArtifactName: "CodeAnalysisLogs"
+    publishLocation: "Container"
+
